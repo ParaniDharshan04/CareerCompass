@@ -79,7 +79,7 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
-            <div className="grid w-full max-w-sm items-center gap-1.5">
+            <div className="grid w-full max-w-sm items-center gap-1.5 flex-1">
               <Label htmlFor="resume-upload" className="sr-only">Upload Resume</Label>
               <Input id="resume-upload" type="file" onChange={handleFileChange} accept=".pdf,.doc,.docx" className="cursor-pointer" />
               {fileName && <p className="text-sm text-muted-foreground">Selected: {fileName}</p>}
