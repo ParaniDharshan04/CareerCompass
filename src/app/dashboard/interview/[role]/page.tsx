@@ -13,6 +13,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
+import { Label } from "@/components/ui/label";
 
 export default function InterviewPage() {
   const router = useRouter();
