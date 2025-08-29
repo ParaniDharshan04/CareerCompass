@@ -100,16 +100,18 @@ export default function ResultsPage() {
                 <p className="text-center text-sm text-muted-foreground">A measure of your performance across all questions.</p>
             </div>
           <div className="h-[250px]">
-            <ResponsiveContainer width="100%" height="100%">
-               <RechartsBarChart data={chartData}>
-                  <XAxis dataKey="question" stroke="hsl(var(--foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="hsl(var(--foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="clarity" fill="var(--color-clarity)" radius={4} />
-                  <Bar dataKey="relevance" fill="var(--color-relevance)" radius={4} />
-                  <Bar dataKey="completeness" fill="var(--color-completeness)" radius={4} />
-                </RechartsBarChart>
-            </ResponsiveContainer>
+            <ChartContainer config={chartConfig} className="h-full w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                 <RechartsBarChart data={chartData}>
+                    <XAxis dataKey="question" stroke="hsl(var(--foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis stroke="hsl(var(--foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="clarity" fill="var(--color-clarity)" radius={4} />
+                    <Bar dataKey="relevance" fill="var(--color-relevance)" radius={4} />
+                    <Bar dataKey="completeness" fill="var(--color-completeness)" radius={4} />
+                  </RechartsBarChart>
+              </ResponsiveContainer>
+            </ChartContainer>
           </div>
         </CardContent>
       </Card>
