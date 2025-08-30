@@ -17,15 +17,25 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Line, LineChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import type { FullInterview } from "@/lib/types";
 import { ArrowRight, BarChart3, Edit, Trophy, Star, Briefcase } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Badge } from "@/components/ui/badge";
 
 export default function ProfilePage() {
   const [interviews, setInterviews] = useState<FullInterview[]>([]);
+  const [user, setUser] = useState({
+    name: "John Doe",
+    email: "john.doe@example.com",
+    avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d",
+    initials: "JD",
+  });
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -45,6 +55,22 @@ export default function ProfilePage() {
       setInterviews(pastInterviews.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
     }
   }, []);
+  
+  const handleProfileSave = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const newName = formData.get("name") as string;
+    const newEmail = formData.get("email") as string;
+    const newAvatar = formData.get("avatar") as string;
+    
+    setUser({
+      name: newName,
+      email: newEmail,
+      avatar: newAvatar || user.avatar,
+      initials: newName.split(" ").map(n => n[0]).join("").toUpperCase(),
+    });
+    setIsEditDialogOpen(false);
+  };
 
   const stats = useMemo(() => {
     const totalInterviews = interviews.length;
@@ -81,21 +107,50 @@ export default function ProfilePage() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-3">
-          <CardHeader className="flex flex-row items-center justify-between">
+           <CardHeader className="flex flex-row items-center justify-between">
             <div className="flex items-center gap-4">
               <Avatar className="h-20 w-20">
-                <AvatarImage src="https://i.pravatar.cc/150?u=a042581f4e29026704d" />
-                <AvatarFallback>JD</AvatarFallback>
+                <AvatarImage src={user.avatar} />
+                <AvatarFallback>{user.initials}</AvatarFallback>
               </Avatar>
               <div>
-                <CardTitle className="text-2xl font-bold">John Doe</CardTitle>
-                <p className="text-muted-foreground">john.doe@example.com</p>
+                <CardTitle className="text-2xl font-bold">{user.name}</CardTitle>
+                <p className="text-muted-foreground">{user.email}</p>
               </div>
             </div>
-            <Button variant="outline" size="icon">
-              <Edit className="h-4 w-4" />
-              <span className="sr-only">Edit Profile</span>
-            </Button>
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                <DialogTrigger asChild>
+                    <Button variant="outline" size="icon">
+                        <Edit className="h-4 w-4" />
+                        <span className="sr-only">Edit Profile</span>
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit Profile</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleProfileSave} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="name">Name</Label>
+                            <Input id="name" name="name" defaultValue={user.name} required />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input id="email" name="email" type="email" defaultValue={user.email} required />
+                        </div>
+                        <div className="space-y-2">
+                           <Label htmlFor="avatar">Avatar URL</Label>
+                           <Input id="avatar" name="avatar" type="url" defaultValue={user.avatar} />
+                        </div>
+                        <DialogFooter>
+                            <DialogClose asChild>
+                                <Button type="button" variant="ghost">Cancel</Button>
+                            </DialogClose>
+                            <Button type="submit">Save Changes</Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
           </CardHeader>
         </Card>
 
@@ -222,3 +277,4 @@ export default function ProfilePage() {
       </div>
     </div>
   );
+}
