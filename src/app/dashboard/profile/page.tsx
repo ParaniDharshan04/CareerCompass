@@ -24,7 +24,7 @@ import { Line, LineChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } fro
 import type { FullInterview } from "@/lib/types";
 import { ArrowRight, BarChart3, Edit, Trophy, Star, Briefcase } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ChangeEvent } from "react";
 import { Badge } from "@/components/ui/badge";
 
 export default function ProfilePage() {
@@ -36,6 +36,7 @@ export default function ProfilePage() {
     initials: "JD",
   });
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -61,16 +62,28 @@ export default function ProfilePage() {
     const formData = new FormData(e.currentTarget);
     const newName = formData.get("name") as string;
     const newEmail = formData.get("email") as string;
-    const newAvatar = formData.get("avatar") as string;
     
     setUser({
       name: newName,
       email: newEmail,
-      avatar: newAvatar || user.avatar,
+      avatar: avatarPreview || user.avatar,
       initials: newName.split(" ").map(n => n[0]).join("").toUpperCase(),
     });
+    setAvatarPreview(null);
     setIsEditDialogOpen(false);
   };
+
+  const handleAvatarChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
 
   const stats = useMemo(() => {
     const totalInterviews = interviews.length;
@@ -118,7 +131,7 @@ export default function ProfilePage() {
                 <p className="text-muted-foreground">{user.email}</p>
               </div>
             </div>
-            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <Dialog open={isEditDialogOpen} onOpenChange={(isOpen) => { setIsEditDialogOpen(isOpen); if (!isOpen) setAvatarPreview(null);}}>
                 <DialogTrigger asChild>
                     <Button variant="outline" size="icon">
                         <Edit className="h-4 w-4" />
@@ -139,8 +152,14 @@ export default function ProfilePage() {
                             <Input id="email" name="email" type="email" defaultValue={user.email} required />
                         </div>
                         <div className="space-y-2">
-                           <Label htmlFor="avatar">Avatar URL</Label>
-                           <Input id="avatar" name="avatar" type="url" defaultValue={user.avatar} />
+                           <Label htmlFor="avatar-upload">Profile Picture</Label>
+                           <div className="flex items-center gap-4">
+                            <Avatar className="h-16 w-16">
+                                <AvatarImage src={avatarPreview || user.avatar} />
+                                <AvatarFallback>{user.initials}</AvatarFallback>
+                            </Avatar>
+                            <Input id="avatar-upload" name="avatar" type="file" onChange={handleAvatarChange} accept="image/*" />
+                           </div>
                         </div>
                         <DialogFooter>
                             <DialogClose asChild>
