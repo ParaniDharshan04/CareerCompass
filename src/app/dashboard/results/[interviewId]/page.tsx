@@ -145,7 +145,7 @@ export default function ResultsPage() {
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">
             <div className="flex flex-col items-center justify-center space-y-4 rounded-lg bg-secondary p-6">
-                <p className="text-sm font-medium text-muted-foreground">Overall Score</p>
+                <div className="text-sm font-medium text-muted-foreground">Overall Score</div>
                 <div className={`flex items-center justify-center h-32 w-32 rounded-full border-8 border-primary/20 ${getScoreColor(interview.overallScore)}`}>
                     <span className="text-4xl font-bold">{interview.overallScore}</span>
                 </div>

@@ -208,7 +208,7 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalInterviews}</div>
-            <p className="text-xs text-muted-foreground">mock interviews completed</p>
+            <div className="text-xs text-muted-foreground">mock interviews completed</div>
           </CardContent>
         </Card>
         
@@ -219,7 +219,7 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.averageScore}%</div>
-             <p className="text-xs text-muted-foreground">across all interviews</p>
+             <div className="text-xs text-muted-foreground">across all interviews</div>
           </CardContent>
         </Card>
 
@@ -232,12 +232,12 @@ export default function ProfilePage() {
              {stats.bestInterview ? (
                 <>
                     <div className="text-2xl font-bold">{stats.bestInterview.overallScore}%</div>
-                    <p className="text-xs text-muted-foreground">in {stats.bestInterview.role}</p>
+                    <div className="text-xs text-muted-foreground">in {stats.bestInterview.role}</div>
                 </>
              ) : (
                 <>
                     <div className="text-2xl font-bold">N/A</div>
-                    <p className="text-xs text-muted-foreground">No interviews yet</p>
+                    <div className="text-xs text-muted-foreground">No interviews yet</div>
                 </>
              )}
           </CardContent>
