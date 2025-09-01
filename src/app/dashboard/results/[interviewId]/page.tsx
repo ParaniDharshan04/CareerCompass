@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -22,19 +23,66 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { Bar, BarChart as RechartsBarChart, XAxis, YAxis, ResponsiveContainer } from "recharts";
+import { Skeleton } from "@/components/ui/skeleton";
+
+
+function ResultsLoadingSkeleton() {
+  return (
+    <div className="space-y-8">
+      <Skeleton className="h-6 w-48" />
+      <div>
+        <Skeleton className="h-9 w-1/2 mb-2" />
+        <Skeleton className="h-5 w-1/4" />
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <Skeleton className="h-7 w-48" />
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-6 md:grid-cols-2">
+          <div className="flex flex-col items-center justify-center space-y-4 rounded-lg bg-secondary p-6">
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-32 w-32 rounded-full" />
+            <div className="text-center space-y-2">
+              <Skeleton className="h-4 w-48" />
+              <Skeleton className="h-4 w-32" />
+            </div>
+          </div>
+          <div className="h-[250px]">
+            <Skeleton className="h-full w-full" />
+          </div>
+        </CardContent>
+      </Card>
+
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight font-headline mb-4">
+          <Skeleton className="h-8 w-64" />
+        </h2>
+        <div className="w-full space-y-2">
+            {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-14 w-full"/>)}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function ResultsPage() {
   const params = useParams();
   const interviewId = params.interviewId as string;
   const [interview, setInterview] = useState<FullInterview | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
+      setLoading(true);
       const pastInterviews = JSON.parse(
         localStorage.getItem("careercompass_interviews") || "[]"
       ) as FullInterview[];
       const foundInterview = pastInterviews.find((i) => i.id === interviewId);
       setInterview(foundInterview || null);
+      setLoading(false);
     }
   }, [interviewId]);
 
@@ -55,11 +103,15 @@ export default function ResultsPage() {
   } satisfies ChartConfig;
 
 
+  if (loading) {
+    return <ResultsLoadingSkeleton />;
+  }
+
   if (!interview) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
         <h2 className="text-2xl font-bold">Interview Not Found</h2>
-        <p className="text-muted-foreground">The requested interview results could not be found.</p>
+        <div className="text-muted-foreground">The requested interview results could not be found.</div>
         <Button asChild className="mt-4">
           <Link href="/dashboard">Back to Dashboard</Link>
         </Button>
