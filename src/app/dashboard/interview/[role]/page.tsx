@@ -46,40 +46,38 @@ export default function InterviewPage() {
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
-        recognitionRef.current = new SpeechRecognition();
-        recognitionRef.current.continuous = true;
-        recognitionRef.current.interimResults = true;
-        recognitionRef.current.lang = 'en-US';
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
 
-        recognitionRef.current.onresult = (event: any) => {
-            let interimTranscript = '';
-            let finalTranscript = '';
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-                if (event.results[i].isFinal) {
-                    finalTranscript += event.results[i][0].transcript;
-                } else {
-                    interimTranscript += event.results[i][0].transcript;
-                }
-            }
-            setCurrentResponse(prev => prev + finalTranscript);
-        };
-        
-        recognitionRef.current.onerror = (event: any) => {
-            console.error("Speech recognition error", event.error);
-            toast({
-                variant: 'destructive',
-                title: 'Speech Recognition Error',
-                description: `An error occurred: ${event.error}`,
-            })
-            setIsRecording(false);
-        };
-
-        recognitionRef.current.onend = () => {
-          if (isRecording) {
-            // If it stops unexpectedly, try to restart it
-            recognitionRef.current.start();
+      recognition.onresult = (event: any) => {
+          let finalTranscript = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+              if (event.results[i].isFinal) {
+                  finalTranscript += event.results[i][0].transcript;
+              }
           }
-        };
+          if (finalTranscript) {
+            setCurrentResponse(prev => (prev ? prev + " " : "") + finalTranscript);
+          }
+      };
+      
+      recognition.onerror = (event: any) => {
+          console.error("Speech recognition error", event.error);
+          toast({
+              variant: 'destructive',
+              title: 'Speech Recognition Error',
+              description: `An error occurred: ${event.error}`,
+          })
+          setIsRecording(false);
+      };
+
+      recognition.onend = () => {
+        setIsRecording(false);
+      };
+
+      recognitionRef.current = recognition;
 
     } else {
        toast({
@@ -88,7 +86,7 @@ export default function InterviewPage() {
         description: "Your browser does not support Speech Recognition.",
       });
     }
-  }, [toast, isRecording]);
+  }, [toast]);
 
 
   const handleToggleRecording = () => {
