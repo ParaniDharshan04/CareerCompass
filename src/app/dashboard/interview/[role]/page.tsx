@@ -1,3 +1,4 @@
+
 "use client";
 
 import { analyzeInterviewResponses } from "@/ai/flows/analyze-interview-responses";
@@ -218,7 +219,7 @@ export default function InterviewPage() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div>
-            <p className="text-sm font-medium text-muted-foreground mb-1">Question {currentQuestionIndex + 1} of {questions.length}</p>
+            <div className="text-sm font-medium text-muted-foreground mb-1">Question {currentQuestionIndex + 1} of {questions.length}</div>
             <Progress value={progress} className="w-full" />
           </div>
 
@@ -282,7 +283,9 @@ function InterviewLoadingSkeleton({ role }: { role: string }) {
         </CardHeader>
         <CardContent className="space-y-6">
            <div>
-            <Skeleton className="h-4 w-1/4 mb-1" />
+            <div className="text-sm font-medium text-muted-foreground mb-1">
+              <Skeleton className="h-4 w-1/4" />
+            </div>
             <Skeleton className="h-4 w-full" />
           </div>
            <div className="p-4 bg-secondary rounded-lg">
