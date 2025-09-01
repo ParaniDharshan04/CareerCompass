@@ -9,14 +9,23 @@ import { useToast } from "@/hooks/use-toast";
 import type { RoleRecommendation } from "@/lib/types";
 import { Upload, Bot, Briefcase, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { useState, type ChangeEvent } from "react";
+import { useState, type ChangeEvent, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardPage() {
   const [fileName, setFileName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [recommendations, setRecommendations] = useState<RoleRecommendation | null>(null);
+  const [userName, setUserName] = useState("User");
   const { toast } = useToast();
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("careercompass_user");
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      setUserName(user.name);
+    }
+  }, []);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -64,7 +73,7 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight font-headline">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back, John! Let's get you ready for your next role.</p>
+        <p className="text-muted-foreground">Welcome back, {userName}! Let's get you ready for your next role.</p>
       </div>
 
       <Card>
