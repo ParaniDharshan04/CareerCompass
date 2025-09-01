@@ -8,12 +8,21 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import type { InterviewResult } from "@/lib/types";
-import { Bot, ChevronLeft, Loader2, Send } from "lucide-react";
+import { Bot, ChevronLeft, Loader2, Send, Mic, MicOff } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { Label } from "@/components/ui/label";
+
+// SpeechRecognition might not be available in the window object, so we need to declare it
+declare global {
+    interface Window {
+        SpeechRecognition: any;
+        webkitSpeechRecognition: any;
+    }
+}
+
 
 export default function InterviewPage() {
   const router = useRouter();
@@ -27,7 +36,71 @@ export default function InterviewPage() {
   
   const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(true);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  
   const { toast } = useToast();
+  const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = true;
+        recognitionRef.current.interimResults = true;
+        recognitionRef.current.lang = 'en-US';
+
+        recognitionRef.current.onresult = (event: any) => {
+            let interimTranscript = '';
+            let finalTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript;
+                } else {
+                    interimTranscript += event.results[i][0].transcript;
+                }
+            }
+            setCurrentResponse(prev => prev + finalTranscript);
+        };
+        
+        recognitionRef.current.onerror = (event: any) => {
+            console.error("Speech recognition error", event.error);
+            toast({
+                variant: 'destructive',
+                title: 'Speech Recognition Error',
+                description: `An error occurred: ${event.error}`,
+            })
+            setIsRecording(false);
+        };
+
+        recognitionRef.current.onend = () => {
+          if (isRecording) {
+            // If it stops unexpectedly, try to restart it
+            recognitionRef.current.start();
+          }
+        };
+
+    } else {
+       toast({
+        variant: "destructive",
+        title: "Browser Not Supported",
+        description: "Your browser does not support Speech Recognition.",
+      });
+    }
+  }, [toast, isRecording]);
+
+
+  const handleToggleRecording = () => {
+    if (!recognitionRef.current) return;
+
+    if (isRecording) {
+      recognitionRef.current.stop();
+      setIsRecording(false);
+    } else {
+      setCurrentResponse("");
+      recognitionRef.current.start();
+      setIsRecording(true);
+    }
+  };
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -58,6 +131,11 @@ export default function InterviewPage() {
   }, [role, router, toast]);
 
   const handleSubmitResponse = async () => {
+    if (isRecording) {
+      recognitionRef.current.stop();
+      setIsRecording(false);
+    }
+
     if (!currentResponse.trim()) {
       toast({
         variant: "destructive",
@@ -148,18 +226,26 @@ export default function InterviewPage() {
             <p className="text-lg font-semibold text-foreground">{questions[currentQuestionIndex]}</p>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="response" className="font-semibold flex items-center gap-2">
-              <Bot className="h-5 w-5 text-primary" /> Your Answer (as transcribed by AI)
-            </Label>
-            <Textarea
-              id="response"
-              value={currentResponse}
-              onChange={(e) => setCurrentResponse(e.target.value)}
-              placeholder="Speak your answer, and the AI will transcribe it here... (for demo, please type)"
-              rows={8}
-              disabled={isAnalyzing}
-            />
+          <div className="space-y-4">
+             <div className="flex items-center gap-4">
+                <Button onClick={handleToggleRecording} variant={isRecording ? "destructive" : "outline"} size="lg" disabled={isAnalyzing}>
+                  {isRecording ? <><MicOff className="mr-2 h-5 w-5"/>Stop Recording</> : <><Mic className="mr-2 h-5 w-5"/>Start Recording</>}
+                </Button>
+                {isRecording && <div className="flex items-center gap-2 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin"/> <span>Recording...</span></div>}
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="response" className="font-semibold flex items-center gap-2">
+                  <Bot className="h-5 w-5 text-primary" /> Your Answer (as transcribed by AI)
+                </Label>
+                <Textarea
+                  id="response"
+                  value={currentResponse}
+                  onChange={(e) => setCurrentResponse(e.target.value)}
+                  placeholder="Speak your answer, and the AI will transcribe it here..."
+                  rows={8}
+                  disabled={isAnalyzing || isRecording}
+                />
+            </div>
           </div>
 
           <Button onClick={handleSubmitResponse} disabled={isAnalyzing || !currentResponse.trim()} className="w-full sm:w-auto">
@@ -191,7 +277,7 @@ function InterviewLoadingSkeleton({ role }: { role: string }) {
             <Skeleton className="h-8 w-1/2" />
           </CardTitle>
           <CardDescription>
-            <Skeleton className="h-4 w-3/4" />
+             <Skeleton className="h-4 w-3/4" />
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -203,9 +289,12 @@ function InterviewLoadingSkeleton({ role }: { role: string }) {
             <Skeleton className="h-6 w-full" />
             <Skeleton className="h-6 w-2/3 mt-2" />
           </div>
-          <div className="space-y-2">
-            <Skeleton className="h-6 w-1/3" />
-            <Skeleton className="h-32 w-full" />
+          <div className="space-y-4">
+            <Skeleton className="h-12 w-48" />
+             <div className="space-y-2">
+                <Skeleton className="h-6 w-1/3" />
+                <Skeleton className="h-32 w-full" />
+            </div>
           </div>
           <Skeleton className="h-10 w-48" />
         </CardContent>
