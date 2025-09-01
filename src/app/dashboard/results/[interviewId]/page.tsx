@@ -51,7 +51,7 @@ function ResultsLoadingSkeleton() {
             </div>
           </div>
           <div className="h-[250px]">
-            <Skeleton className="h-full w-full" />
+             <Skeleton className="h-full w-full" />
           </div>
         </CardContent>
       </Card>
@@ -134,9 +134,9 @@ export default function ResultsPage() {
 
       <div>
         <h1 className="text-3xl font-bold tracking-tight font-headline">Interview Results: {interview.role}</h1>
-        <p className="text-muted-foreground">
+        <div className="text-muted-foreground">
           Completed on {new Date(interview.date).toLocaleDateString()}
-        </p>
+        </div>
       </div>
 
       <Card>
@@ -149,7 +149,7 @@ export default function ResultsPage() {
                 <div className={`flex items-center justify-center h-32 w-32 rounded-full border-8 border-primary/20 ${getScoreColor(interview.overallScore)}`}>
                     <span className="text-4xl font-bold">{interview.overallScore}</span>
                 </div>
-                <p className="text-center text-sm text-muted-foreground">A measure of your performance across all questions.</p>
+                <div className="text-center text-sm text-muted-foreground">A measure of your performance across all questions.</div>
             </div>
           <div className="h-[250px]">
             <ChartContainer config={chartConfig} className="h-full w-full">
