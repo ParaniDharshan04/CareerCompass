@@ -20,9 +20,10 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Line, LineChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import type { FullInterview } from "@/lib/types";
-import { ArrowRight, BarChart3, Edit, Trophy, Star, Briefcase } from "lucide-react";
+import { ArrowRight, BarChart3, Edit, Trophy, Star, Briefcase, UserCircle } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState, type FormEvent, type ChangeEvent } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -34,27 +35,40 @@ export default function ProfilePage() {
     email: "john.doe@example.com",
     avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d",
     initials: "JD",
+    description: "A passionate software engineer with experience in building scalable web applications using modern technologies.",
   });
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      let pastInterviews = JSON.parse(
-        localStorage.getItem("careercompass_interviews") || "[]"
-      ) as FullInterview[];
+    const loadData = () => {
+      if (typeof window !== "undefined") {
+        const storedUser = localStorage.getItem("careercompass_user");
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+        }
 
-      if(pastInterviews.length === 0) {
-        pastInterviews = [
-          {id: "mock_1", role: "Frontend Developer", date: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(), results: [], overallScore: 75},
-          {id: "mock_2", role: "Product Manager", date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), results: [], overallScore: 82},
-          {id: "mock_3", role: "UX Designer", date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), results: [], overallScore: 88},
-        ];
-        localStorage.setItem("careercompass_interviews", JSON.stringify(pastInterviews));
+        let pastInterviews = JSON.parse(
+          localStorage.getItem("careercompass_interviews") || "[]"
+        ) as FullInterview[];
+
+        if(pastInterviews.length === 0) {
+          pastInterviews = [
+            {id: "mock_1", role: "Frontend Developer", date: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(), results: [], overallScore: 75},
+            {id: "mock_2", role: "Product Manager", date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), results: [], overallScore: 82},
+            {id: "mock_3", role: "UX Designer", date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), results: [], overallScore: 88},
+          ];
+          localStorage.setItem("careercompass_interviews", JSON.stringify(pastInterviews));
+        }
+        
+        setInterviews(pastInterviews.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
       }
-      
-      setInterviews(pastInterviews.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
-    }
+    };
+    loadData();
+
+    // Listen for storage changes to update the profile in real-time
+    window.addEventListener('storage', loadData);
+    return () => window.removeEventListener('storage', loadData);
   }, []);
   
   const handleProfileSave = (e: FormEvent<HTMLFormElement>) => {
@@ -62,13 +76,22 @@ export default function ProfilePage() {
     const formData = new FormData(e.currentTarget);
     const newName = formData.get("name") as string;
     const newEmail = formData.get("email") as string;
+    const newDescription = formData.get("description") as string;
     
-    setUser({
+    const updatedUser = {
+      ...user,
       name: newName,
       email: newEmail,
+      description: newDescription,
       avatar: avatarPreview || user.avatar,
       initials: newName.split(" ").map(n => n[0]).join("").toUpperCase(),
-    });
+    };
+
+    setUser(updatedUser);
+    localStorage.setItem("careercompass_user", JSON.stringify(updatedUser));
+    // Trigger storage event for other components like UserNav
+    window.dispatchEvent(new Event('storage'));
+
     setAvatarPreview(null);
     setIsEditDialogOpen(false);
   };
@@ -120,15 +143,16 @@ export default function ProfilePage() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-3">
-           <CardHeader className="flex flex-row items-center justify-between">
-            <div className="flex items-center gap-4">
+           <CardHeader className="flex flex-row items-start justify-between gap-4">
+            <div className="flex items-start gap-4">
               <Avatar className="h-20 w-20">
                 <AvatarImage src={user.avatar} />
                 <AvatarFallback>{user.initials}</AvatarFallback>
               </Avatar>
-              <div>
+              <div className="flex-1">
                 <CardTitle className="text-2xl font-bold">{user.name}</CardTitle>
                 <p className="text-muted-foreground">{user.email}</p>
+                 <CardDescription className="mt-2 text-base text-foreground/90">{user.description}</CardDescription>
               </div>
             </div>
             <Dialog open={isEditDialogOpen} onOpenChange={(isOpen) => { setIsEditDialogOpen(isOpen); if (!isOpen) setAvatarPreview(null);}}>
@@ -138,19 +162,11 @@ export default function ProfilePage() {
                         <span className="sr-only">Edit Profile</span>
                     </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="sm:max-w-[480px]">
                     <DialogHeader>
                         <DialogTitle>Edit Profile</DialogTitle>
                     </DialogHeader>
                     <form onSubmit={handleProfileSave} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="name">Name</Label>
-                            <Input id="name" name="name" defaultValue={user.name} required />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input id="email" name="email" type="email" defaultValue={user.email} required />
-                        </div>
                         <div className="space-y-2">
                            <Label htmlFor="avatar-upload">Profile Picture</Label>
                            <div className="flex items-center gap-4">
@@ -160,6 +176,18 @@ export default function ProfilePage() {
                             </Avatar>
                             <Input id="avatar-upload" name="avatar" type="file" onChange={handleAvatarChange} accept="image/*" />
                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="name">Name</Label>
+                            <Input id="name" name="name" defaultValue={user.name} required />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input id="email" name="email" type="email" defaultValue={user.email} required />
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="description">About Me</Label>
+                            <Textarea id="description" name="description" defaultValue={user.description} required />
                         </div>
                         <DialogFooter>
                             <DialogClose asChild>

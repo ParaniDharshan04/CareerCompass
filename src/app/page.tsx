@@ -42,12 +42,6 @@ export default function Home() {
             </Link>
           </div>
           <div className="flex flex-1 items-center justify-end space-x-2">
-            <Button variant="ghost" asChild>
-              <Link href="/login">
-                <LogIn className="mr-2 h-4 w-4" />
-                Login
-              </Link>
-            </Button>
             <Button asChild>
               <Link href="/signup">Get Started</Link>
             </Button>
@@ -68,9 +62,6 @@ export default function Home() {
               <div className="mt-10 flex items-center justify-center gap-x-6">
                 <Button size="lg" asChild>
                   <Link href="/signup">Start Your Journey</Link>
-                </Button>
-                <Button size="lg" variant="outline" asChild>
-                  <Link href="/login">I have an account</Link>
                 </Button>
               </div>
             </div>
