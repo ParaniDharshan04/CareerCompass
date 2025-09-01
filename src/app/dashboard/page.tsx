@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import type { RoleRecommendation } from "@/lib/types";
-import { Upload, Bot, Briefcase, ArrowRight } from "lucide-react";
+import { Upload, Bot, Briefcase, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useState, type ChangeEvent, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -51,18 +51,22 @@ export default function DashboardPage() {
       // In a real app, you would parse the resume file to text here.
       // For this demo, we'll use a mock resume text.
       const mockResumeText = `
-        John Doe - Software Engineer
-        Experience in React, Next.js, and TypeScript.
-        Led a team to build a scalable web application.
+        A passionate software engineer with experience in building scalable web applications using modern technologies.
+        Skills: React, Next.js, TypeScript, Node.js, GraphQL.
+        Experience: Led a team to build a high-traffic e-commerce platform.
       `;
       const result = await recommendSuitableRoles({ resumeData: mockResumeText });
       setRecommendations(result);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error analyzing resume:", error);
+      let description = "There was an error analyzing your resume. Please try again.";
+      if (error.message?.includes('503')) {
+        description = "Our AI is currently busy. Please wait a moment and try again.";
+      }
       toast({
         variant: "destructive",
         title: "Analysis Failed",
-        description: "There was an error analyzing your resume. Please try again.",
+        description,
       });
     } finally {
       setIsLoading(false);
@@ -94,8 +98,17 @@ export default function DashboardPage() {
               {fileName && <p className="text-sm text-muted-foreground">Selected: {fileName}</p>}
             </div>
             <Button onClick={handleAnalyzeResume} disabled={isLoading || !fileName}>
-              <Bot className="mr-2 h-4 w-4" />
-              {isLoading ? 'Analyzing...' : 'Analyze Resume'}
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Analyzing...
+                </>
+              ) : (
+                <>
+                  <Bot className="mr-2 h-4 w-4" />
+                  Analyze Resume
+                </>
+              )}
             </Button>
           </div>
         </CardContent>
@@ -154,9 +167,9 @@ function LoadingRecommendations() {
         <Skeleton className="h-8 w-64" />
       </h2>
       <div className="space-y-4">
-        <Card>
+        <Card className="bg-primary/10 border-primary/20">
           <CardHeader>
-            <CardTitle><Skeleton className="h-6 w-40" /></CardTitle>
+            <CardTitle className="text-lg font-semibold"><Skeleton className="h-6 w-40" /></CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <Skeleton className="h-4 w-full" />
@@ -167,9 +180,15 @@ function LoadingRecommendations() {
           {[...Array(3)].map((_, i) => (
             <Card key={i}>
               <CardHeader>
-                <CardTitle><Skeleton className="h-6 w-1/2" /></CardTitle>
+                 <div className="flex items-center gap-3">
+                      <Skeleton className="h-12 w-12 rounded-lg" />
+                      <div className="space-y-2">
+                        <Skeleton className="h-6 w-32" />
+                      </div>
+                    </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-2">
+                 <Skeleton className="h-4 w-full" />
                  <Skeleton className="h-10 w-full" />
               </CardContent>
             </Card>
