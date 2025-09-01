@@ -13,9 +13,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogOut, User as UserIcon } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export function UserNav() {
+  const router = useRouter();
   const [user, setUser] = useState({
     name: "John Doe",
     email: "john.doe@example.com",
@@ -30,6 +32,10 @@ export function UserNav() {
         const storedUser = localStorage.getItem('careercompass_user');
         if (storedUser) {
             setUser(JSON.parse(storedUser));
+        } else {
+            // If user is not found, redirect to signup.
+            // This handles the case where localStorage is cleared.
+            // router.push('/signup');
         }
     };
     // Let's check for it on mount
@@ -40,6 +46,13 @@ export function UserNav() {
         window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("careercompass_user");
+    localStorage.removeItem("careercompass_interviews");
+    window.dispatchEvent(new Event('storage'));
+    router.push('/');
+  }
 
 
   return (
@@ -71,11 +84,9 @@ export function UserNav() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href="/signup">
-            <LogOut className="mr-2 h-4 w-4" />
-            <span>Log out</span>
-          </Link>
+        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Log out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
